@@ -32,18 +32,18 @@ func New(serviceName, logLevel string) *Logger {
 	logger := zerolog.New(os.Stdout).
 		Level(level).
 		With().
-		Timestamp().Str("service",serviceName).
+		Timestamp().Str("service", serviceName).
 		Logger()
-	
+
 	return &Logger{logger: logger}
 }
 
 func (l *Logger) WithContext(ctx context.Context) *Logger {
-	span:= trace.SpanFromContext(ctx)
+	span := trace.SpanFromContext(ctx)
 	if span.SpanContext().IsValid() {
 		logger := l.logger.With().
 			Str("trace_id", span.SpanContext().TraceID().String()).
-			Str("span_id",span.SpanContext().SpanID().String()).
+			Str("span_id", span.SpanContext().SpanID().String()).
 			Logger()
 		return &Logger{logger: logger}
 	}
@@ -67,7 +67,7 @@ func (l *Logger) Error(msg string) {
 }
 
 func (l *Logger) With(key, value string) *Logger {
-	return &Logger{logger: l.logger.With().Str(key,value).Logger()}
+	return &Logger{logger: l.logger.With().Str(key, value).Logger()}
 }
 
 func (l *Logger) WithError(err error) *Logger {
