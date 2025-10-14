@@ -9,7 +9,7 @@ import (
 
 var validate *validator.Validate
 
-func init(){
+func init() {
 	validate = validator.New()
 
 	// Register custom validators
@@ -35,7 +35,7 @@ func validatePassword(f1 validator.FieldLevel) bool {
 
 func GetValidationErrors(err error) map[string]string {
 	errors := make(map[string]string)
-	
+
 	if validationErrors, ok := err.(validator.ValidationErrors); ok {
 		for _, e := range validationErrors {
 			field := e.Field()
@@ -55,6 +55,6 @@ func GetValidationErrors(err error) map[string]string {
 			}
 		}
 	}
-	
+
 	return errors
 }
