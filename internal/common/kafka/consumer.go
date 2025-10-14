@@ -13,34 +13,34 @@ import (
 )
 
 type Producer struct {
-	writer *kafka.Writer
-	logger *logger.Logger
-	metrics *metrics.Metrics
-	tracer trace.Tracer
+	writer     *kafka.Writer
+	logger     *logger.Logger
+	metrics    *metrics.Metrics
+	tracer     trace.Tracer
 	maxRetries int
 }
 
 func NewProducer(brokers []string, logger *logger.Logger, metrics *metrics.Metrics, tracer trace.Tracer) *Producer {
 	writer := &kafka.Writer{
-		Addr: kafka.TCP(brokers...),
-		Balancer: &kafka.LeastBytes{},
-		BatchSize: 100,
-		BatchTimeout: 10* time.Millisecond,
-		ReadTimeout: 10 * time.Second,
+		Addr:         kafka.TCP(brokers...),
+		Balancer:     &kafka.LeastBytes{},
+		BatchSize:    100,
+		BatchTimeout: 10 * time.Millisecond,
+		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		RequiredAcks: kafka.RequireAll,
-		Async: false,
-		Compression: kafka.Snappy,
+		Async:        false,
+		Compression:  kafka.Snappy,
 		ErrorLogger: kafka.LoggerFunc(func(msg string, args ...any) {
-			logger.Error(fmt.Sprintf("kafka producer error: " + msg, args))
+			logger.Error(fmt.Sprintf("kafka producer error: "+msg, args))
 		}),
 	}
 
 	return &Producer{
-		writer: writer,
-		logger: logger,
-		metrics: metrics,
-		tracer: tracer,
+		writer:     writer,
+		logger:     logger,
+		metrics:    metrics,
+		tracer:     tracer,
 		maxRetries: 3,
 	}
 }
@@ -49,7 +49,7 @@ func (p *Producer) Produce(ctx context.Context, topic, key string, value any) er
 	ctx, span := p.tracer.Start(ctx, "kafka.produce")
 	defer span.End()
 
-	payload,err := json.Marshal(value)
+	payload, err := json.Marshal(value)
 	if err != nil {
 		p.metrics.MessageErrors.WithLabelValues(topic, "serialization").Inc()
 		return fmt.Errorf("failed to marshal message: %w", err)
@@ -57,7 +57,7 @@ func (p *Producer) Produce(ctx context.Context, topic, key string, value any) er
 
 	msg := kafka.Message{
 		Topic: topic,
-		Key: []byte(key),
+		Key:   []byte(key),
 		Value: payload,
 		Time:  time.Now(),
 		Headers: []kafka.Header{
@@ -67,7 +67,7 @@ func (p *Producer) Produce(ctx context.Context, topic, key string, value any) er
 
 	if span.SpanContext().IsValid() {
 		msg.Headers = append(msg.Headers, kafka.Header{
-			Key: "trace-id",
+			Key:   "trace-id",
 			Value: []byte(span.SpanContext().TraceID().String()),
 		})
 	}
@@ -88,13 +88,13 @@ func (p *Producer) Produce(ctx context.Context, topic, key string, value any) er
 
 func (p *Producer) writeWithRetry(ctx context.Context, msg kafka.Message) error {
 	var err error
-	for i:=0 ; i<p.maxRetries ; i++ {
-		err := p.writer.WriteMessages(ctx,msg)
+	for i := 0; i < p.maxRetries; i++ {
+		err := p.writer.WriteMessages(ctx, msg)
 		if err == nil {
 			return nil
 		}
 
-		if i<p.maxRetries - 1 {
+		if i < p.maxRetries-1 {
 			backoff := time.Duration(i+1) * time.Second
 			select {
 			case <-time.After(backoff):
