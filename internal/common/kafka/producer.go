@@ -111,7 +111,7 @@ func (c *Consumer) processWithRetry(ctx context.Context, key, value []byte, head
 		messageType := headers["message-type"]
 		if messageType == "" {
 			var payload map[string]any
-			if json.Unmarshal(value, &payload) == nil {
+			if err := json.Unmarshal(value, &payload); err == nil {
 				if mt, ok := payload["type"].(string); ok {
 					messageType = mt
 				}
