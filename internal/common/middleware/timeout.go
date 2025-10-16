@@ -12,14 +12,14 @@ import (
 
 func Timeout(timeout time.Duration) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx,cancel := context.WithTimeout(c.Request.Context(), timeout)
+		ctx, cancel := context.WithTimeout(c.Request.Context(), timeout)
 		defer cancel()
 
 		c.Request = c.Request.WithContext(ctx)
 
 		finished := make(chan struct{})
-		go func ()  {
-			defer func ()  {
+		go func() {
+			defer func() {
 				if err := recover(); err != nil {
 					// TODO : Handle panic
 				}
@@ -30,10 +30,9 @@ func Timeout(timeout time.Duration) gin.HandlerFunc {
 
 		select {
 		case <-finished:
-			// Request completed within timeout
 		case <-ctx.Done():
 			if ctx.Err() == context.DeadlineExceeded {
-				response.Error(c, http.StatusGatewayTimeout, 
+				response.Error(c, http.StatusGatewayTimeout,
 					errors.NewInternalError("request timeout", ctx.Err()))
 				c.Abort()
 			}
