@@ -17,6 +17,10 @@ type Metrics struct {
 	RequestDuration  *prometheus.HistogramVec
 	RequestsInFlight prometheus.Gauge
 
+	// User metrics
+	UsersTotal   *prometheus.CounterVec
+	UsersDeleted *prometheus.CounterVec
+
 	// Business metrics
 	BookingsTotal   *prometheus.CounterVec
 	BookingDuration *prometheus.HistogramVec
@@ -60,6 +64,24 @@ func New(serviceName string) *Metrics {
 				Name:      "http_response_in_flight",
 				Help:      "Number of HTTP requests currently being processed",
 			},
+		),
+		UsersTotal: promauto.NewCounterVec(
+			prometheus.CounterOpts{
+				Namespace: "booking_system",
+				Subsystem: serviceName,
+				Name:      "total_users_created",
+				Help:      "Total number of users created",
+			},
+			[]string{"topic"},
+		),
+		UsersDeleted: promauto.NewCounterVec(
+			prometheus.CounterOpts{
+				Namespace: "booking_system",
+				Subsystem: serviceName,
+				Name:      "total_users_deleted",
+				Help:      "Total number of users deleted",
+			},
+			[]string{"topic"},
 		),
 		BookingsTotal: promauto.NewCounterVec(
 			prometheus.CounterOpts{
